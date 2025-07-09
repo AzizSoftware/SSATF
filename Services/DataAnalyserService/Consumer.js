@@ -1,44 +1,41 @@
 const { Kafka } = require('kafkajs');
 require('dotenv').config();
 
+const KAFKA_BROKER = process.env.KAFKA_BROKER;
+const CLIENTID = process.env.CLIENTID;
+const TOPIC = process.env.TOPIC;
+const GROUPID = process.env.GROUPID;
 
-//variables
-const KAFKA_BROKER=process.env.KAFKA_BROKER;
-const CLIENTID=process.env.CLIENTID;
-const TOPIC=process.env.TOPIC;
-const GROUPID=process.env.GROUPID;
-
-
-// Kafka configuration
 const kafka = new Kafka({
   clientId: CLIENTID,
-  brokers: KAFKA_BROKER, 
+  brokers: [KAFKA_BROKER],
 });
 
-const topic = TOPIC;
-const groupId = GROUPID;
+const consumer = kafka.consumer({ groupId: GROUPID });
 
-const consumer = kafka.consumer({ groupId });
-
-const run = async () => {
+// The startConsumer function takes a message handler callback
+const startConsumer = async (messageHandler) => {
   await consumer.connect();
-  console.log(`Connected to Kafka broker`);
+  console.log('Connected to Kafka broker (Consumer)');
 
-  await consumer.subscribe({ topic, fromBeginning: true });
-  console.log(` Subscribed to topic: ${topic}`);
+  await consumer.subscribe({ topic: TOPIC, fromBeginning: true });
+  console.log(`Subscribed to topic: ${TOPIC}`);
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
-      console.log(`\n Received message`);
-      console.log(`Key: ${message.key?.toString()}`);
-      console.log(`Value: ${message.value?.toString()}`);
-      console.log(`Partition: ${partition} | Offset: ${message.offset}`);
+      try {
+        await messageHandler({ topic, partition, message });
+      } catch (err) {
+        console.error('Error in message handler:', err);
+      }
     },
   });
 };
 
-// Start the consumer
-run().catch((e) => {
-  console.error(' Error in consumer:', e.message);
-  process.exit(1);
-});
+// Export startConsumer for usage in index.js
+module.exports = {
+  startConsumer,
+  disconnectConsumer: async () => {
+    await consumer.disconnect();
+  }
+};

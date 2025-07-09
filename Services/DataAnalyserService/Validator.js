@@ -1,7 +1,9 @@
 const { validate: isUUID } = require('uuid');
 const isValidCurrency = require('currency-codes').code;
-const moment = require('moment');
+const moment = require('moment-timezone');
 const validator = require('validator');
+
+
 
 function validateTransaction(transaction) {
   const errors = [];
@@ -73,7 +75,7 @@ function validateTransaction(transaction) {
         errors.push("BIC must be 8 or 11 uppercase characters.");
         recommendations.push("Use a valid SWIFT/BIC code.");
       }
-      if (!moment.tz.zone(details.timezone)) {
+      if (!details.timezone || !moment.tz.zone(details.timezone)) {
         errors.push("Timezone must be a valid tz database name.");
         recommendations.push("Use formats like 'Europe/Paris'.");
       }
