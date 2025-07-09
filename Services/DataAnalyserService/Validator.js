@@ -3,13 +3,10 @@ const isValidCurrency = require('currency-codes').code;
 const moment = require('moment-timezone');
 const validator = require('validator');
 
-
-
 function validateTransaction(transaction) {
   const errors = [];
   const recommendations = [];
 
-  
   if (transaction.amount <= 0) {
     errors.push("Amount must be greater than zero.");
     recommendations.push("Ensure the transaction amount is a positive number.");
@@ -38,7 +35,6 @@ function validateTransaction(transaction) {
     recommendations.push("Verify the client’s IP address format.");
   }
 
-  
   const details = transaction.details || {};
 
   switch (transaction.type) {
