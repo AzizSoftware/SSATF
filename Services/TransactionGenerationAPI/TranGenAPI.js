@@ -94,7 +94,7 @@ app.get('/transactions', async (req, res) => {
     }
 });
 
-// POST /send-to-kafka → send all transactions to Kafka
+//  send all transactions to Kafka
 app.post('/send-to-kafka', sendTransactionsToKafka);
 
 
