@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,91 +7,122 @@
   <title>Financial Transaction Anomaly Monitoring</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="assets/LOGO.jpeg">
+  <style>
+    /* Importing a professional sans-serif font, similar to Vermeg's brand */
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+    body { font-family: 'Montserrat', sans-serif; }
+
+    /* Custom scrollbar for a cleaner look if content overflows */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+  </style>
 </head>
+<body class="bg-gray-50 text-gray-800">
 
-<body class="bg-gray-50 font-sans text-gray-800">
-
-  <!-- Header -->
-  <header class="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-8 shadow-md">
-    <div class="max-w-5xl mx-auto text-center px-4">
-      <img src="assets/LOGO.jpeg" alt="VERMEG Logo" class="mx-auto h-20 mb-4 rounded-xl shadow-md">
-      <h1 class="text-4xl font-extrabold">Financial Transaction Anomaly Monitoring</h1>
-      <p class="text-sm mt-2 italic">Prototype for real-time anomaly detection | VERMEG – July 2025</p>
+  <header class="bg-[#002C5F] text-white py-8 shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-col items-center px-4">
+      <img src="assets/LOGO.jpeg" alt="VERMEG Logo" class="h-24 w-24 object-contain mb-4 rounded-full border-4 border-white shadow-lg">
+      <h1 class="text-4xl lg:text-5xl font-bold tracking-tight text-center leading-tight">Financial Transaction Anomaly Monitoring</h1>
+      <p class="text-sm md:text-base mt-3 italic opacity-80">Prototype for Real-Time Anomaly Detection | VERMEG – July 2025</p>
     </div>
   </header>
 
-  <!-- Main -->
-  <main class="max-w-4xl mx-auto px-6 py-10">
-    <!-- Upload Section -->
-    <section class="bg-white p-8 rounded-xl shadow-md mb-10 border border-gray-200">
-      <h2 class="text-2xl font-bold mb-4 text-blue-800"> Ingest Transaction Data</h2>
-      <p class="mb-6 text-sm text-gray-600">Choose how to upload or connect your transaction data to stream:</p>
+  <main class="max-w-6xl mx-auto px-6 py-16">
+    <section class="bg-white p-10 md:p-12 rounded-xl shadow-2xl border border-gray-100 transform hover:scale-[1.005] transition duration-300 ease-in-out">
+      <h2 class="text-3xl font-bold mb-6 text-[#002C5F] border-b-2 border-[#0061AF] pb-3">Ingest Transaction Data</h2>
+      <p class="mb-8 text-base text-gray-600 leading-relaxed">Choose how to upload or connect your transaction data to the real-time anomaly detection stream:</p>
 
-      <form id="dataForm" class="space-y-6">
-
-        <!-- File Upload -->
+      <form id="dataForm" class="space-y-8">
         <div>
-          <label class="inline-flex items-center mb-2">
-            <input type="radio" name="inputMethod" value="file" class="form-radio text-blue-600 mr-2" checked>
-            <span class="font-medium text-gray-700">Upload File (CSV or JSON)</span>
+          <label class="flex items-center gap-3 text-lg font-medium text-gray-800 cursor-pointer">
+            <input type="radio" name="inputMethod" value="file" class="w-5 h-5 text-[#0061AF] focus:ring-[#0061AF] border-gray-300" checked>
+            Upload File (CSV or JSON)
           </label>
 
-          <div class="flex items-center gap-4 mt-2">
+          <div class="flex items-center gap-4 mt-4 pl-8">
             <input type="file" id="fileInput" accept=".json,.csv" class="hidden" />
-            <label for="fileInput"
-                   class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow cursor-pointer transition duration-300">
-               Choose File
+            <label for="fileInput" class="bg-[#0061AF] hover:bg-[#004A87] text-white px-6 py-3 rounded-md shadow-md hover:shadow-lg cursor-pointer transition duration-200 ease-in-out text-base font-semibold transform hover:-translate-y-0.5">
+              Choose File
             </label>
-            <span id="fileName" class="text-sm text-gray-500 italic">No file selected</span>
+            <span id="fileName" class="text-sm italic text-gray-500">No file selected</span>
           </div>
         </div>
 
-        <!-- MongoDB Inputs -->
-        <div class="pt-4 border-t border-gray-200">
-          <label class="inline-flex items-center mb-2">
-            <input type="radio" name="inputMethod" value="mongo" class="form-radio text-blue-600 mr-2">
-            <span class="font-medium text-gray-700">Connect to MongoDB</span>
+        <div class="pt-8 border-t border-gray-200">
+          <label class="flex items-center gap-3 text-lg font-medium text-gray-800 cursor-pointer">
+            <input type="radio" name="inputMethod" value="mongo" class="w-5 h-5 text-[#0061AF] focus:ring-[#0061AF] border-gray-300">
+            Connect to MongoDB
           </label>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-            <input type="text" id="mongoUri" placeholder="MongoDB URI" class="border px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-400" />
-            <input type="text" id="dbName" placeholder="Database Name" class="border px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-400" />
-            <input type="text" id="collectionName" placeholder="Collection Name" class="border px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-400" />
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 pl-8">
+            <input type="text" id="mongoUri" placeholder="MongoDB URI (e.g., mongodb://localhost:27017)" class="border border-gray-300 px-5 py-3 rounded-lg focus:ring-2 focus:ring-[#0061AF] focus:border-transparent outline-none transition duration-200 text-base" />
+            <input type="text" id="dbName" placeholder="Database Name" class="border border-gray-300 px-5 py-3 rounded-lg focus:ring-2 focus:ring-[#0061AF] focus:border-transparent outline-none transition duration-200 text-base" />
+            <input type="text" id="collectionName" placeholder="Collection Name" class="border border-gray-300 px-5 py-3 rounded-lg focus:ring-2 focus:ring-[#0061AF] focus:border-transparent outline-none transition duration-200 text-base" />
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <div class="pt-4">
-          <button type="submit"
-                  class="w-full bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 rounded-lg transition-all duration-300 shadow-md">
-             Submit Data 
+        <div class="pt-8">
+          <button type="submit" class="w-full bg-[#002C5F] hover:bg-[#001C3C] text-white font-bold py-4 rounded-lg shadow-xl hover:shadow-2xl transition duration-300 ease-in-out text-lg transform hover:scale-[1.01]">
+            Submit Data
           </button>
         </div>
       </form>
 
-      <!-- Response Display -->
-      <div id="response" class="mt-6 p-4 bg-blue-50 border border-blue-300 rounded text-blue-900 text-sm hidden"></div>
+      <div id="response" class="hidden mt-8 p-5 rounded-lg border border-blue-300 bg-blue-50 text-blue-900 text-base font-medium shadow-md"></div>
     </section>
-
-    <!-- System Info -->
-    
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-gray-100 mt-16 border-t border-gray-300 py-6 text-center text-sm text-gray-600">
-    © 2025 VERMEG – All rights reserved. <br>
-
+  <footer class="bg-gray-100 text-gray-600 text-sm md:text-base text-center py-8 border-t border-gray-200">
+    © 2025 VERMEG – All rights reserved
   </footer>
 
-  <!-- JS to show file name -->
   <script>
     document.getElementById("fileInput").addEventListener("change", function () {
       const fileName = this.files[0]?.name || "No file selected";
       document.getElementById("fileName").textContent = fileName;
     });
+
+    // You would integrate your script.js logic here or ensure it's loaded after DOM
+    // For demonstration, input method toggling would go here if not in script.js
+    document.querySelectorAll('input[name="inputMethod"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const isMongoSelected = this.value === 'mongo';
+            document.getElementById('mongoUri').disabled = !isMongoSelected;
+            document.getElementById('dbName').disabled = !isMongoSelected;
+            document.getElementById('collectionName').disabled = !isMongoSelected;
+            // Potentially add visual disabled states for the input fields
+            document.getElementById('mongoUri').classList.toggle('bg-gray-100', !isMongoSelected);
+            document.getElementById('dbName').classList.toggle('bg-gray-100', !isMongoSelected);
+            document.getElementById('collectionName').classList.toggle('bg-gray-100', !isMongoSelected);
+        });
+    });
+
+    // Initialize disabled state for MongoDB fields if file upload is default selected
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const fileRadio = document.querySelector('input[name="inputMethod"][value="file"]');
+        if (fileRadio && fileRadio.checked) {
+            document.getElementById('mongoUri').disabled = true;
+            document.getElementById('dbName').disabled = true;
+            document.getElementById('collectionName').disabled = true;
+            document.getElementById('mongoUri').classList.add('bg-gray-100');
+            document.getElementById('dbName').classList.add('bg-gray-100');
+            document.getElementById('collectionName').classList.add('bg-gray-100');
+        }
+    });
+
   </script>
 
-  <!-- 👇 Include your logic -->
   <script src="script.js"></script>
 </body>
 </html>
