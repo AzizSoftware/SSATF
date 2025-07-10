@@ -1,113 +1,99 @@
-
 require('dotenv').config();
-
 const express = require('express');
+const multer = require('multer');
 const { MongoClient } = require('mongodb');
 const { Kafka } = require('kafkajs');
+const cors = require('cors');
+const fs = require('fs');
+const csvParser = require('csv-parser');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
+const upload = multer({ dest: 'uploads/' });
 
+const PORT = process.env.PORT || 7000;
+const KAFKA_BROKER = process.env.KAFKA_BROKER || 'localhost:9092';
 
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGODB_URI;
-const DATABASE_NAME = process.env.DATABASE_NAME;
-const COLLECTION_NAME = process.env.COLLECTION_NAME;
-const KAFKA_BROKER = process.env.KAFKA_BROKER;
-
-// Validate MongoDB URI
-if (!MONGO_URI) {
-    console.error(" MongoDB URI is not configured correctly in the .env file");
-    process.exit(1);
-}
-
-let mongoClient;
-let db;
-
-// Connect to MongoDB
-async function connectToMongoDB() {
-    try {
-        mongoClient = new MongoClient(MONGO_URI, {});
-        await mongoClient.connect();
-        db = mongoClient.db(DATABASE_NAME);
-        console.log(" Connected successfully to MongoDB");
-        console.log(` Using database: ${db.databaseName}`);
-    } catch (error) {
-        console.error(" MongoDB connection failed:", error.message);
-        process.exit(1);
-    }
-}
-
-// Kafka Producer Configuration
-
-const kafka = new Kafka({
-    clientId: 'transaction-generator',
-    brokers: [KAFKA_BROKER] 
-});
-
+const kafka = new Kafka({ clientId: 'transaction-generator', brokers: [KAFKA_BROKER] });
 const producer = kafka.producer();
 
-// Connect to Kafka
+let currentDbClient = null;
+
 async function connectKafkaProducer() {
-    try {
-        await producer.connect();
-        console.log(' Kafka Producer connected successfully!');
-    } catch (error) {
-        console.error(' Kafka Producer connection failed:', error.message);
-        process.exit(1);
-    }
+  try {
+    await producer.connect();
+    console.log('✅ Kafka Producer connected');
+  } catch (err) {
+    console.error('❌ Kafka connection failed:', err.message);
+    process.exit(1);
+  }
 }
 
-// Send all transactions from MongoDB to Kafka topic
-async function sendTransactionsToKafka(req, res) {
-    try {
-        
+async function sendToKafka(transactions) {
+  const messages = transactions.map(tx => ({
+    key: tx._id?.toString() || Math.random().toString(),
+    value: JSON.stringify(tx),
+  }));
 
-        const transactions = await db.collection(COLLECTION_NAME).find({}).toArray();
+  return producer.send({ topic: 'Transaction-Topic', messages });
+}
 
-        const messages = transactions.map(tx => ({
-            key: tx._id.toString(),
-            value: JSON.stringify(tx)
-        }));
+// 📁 Upload file endpoint
+app.post('/upload-file', upload.single('file'), async (req, res) => {
+  try {
+    const file = req.file;
+    const ext = file.originalname.split('.').pop();
+    let transactions = [];
 
-        const result = await producer.send({
-            topic: 'Transaction-Topic',
-            messages: messages
+    if (ext === 'json') {
+      const raw = fs.readFileSync(file.path);
+      transactions = JSON.parse(raw);
+    } else if (ext === 'csv') {
+      const rows = [];
+      fs.createReadStream(file.path)
+        .pipe(csvParser())
+        .on('data', data => rows.push(data))
+        .on('end', async () => {
+          await sendToKafka(rows);
+          res.json({ message: "✅ CSV data sent to Kafka" });
         });
-
-        console.log(` Sent ${messages.length} transactions to Kafka`);
-        res.json({ status: "Transactions sent to Kafka", result });
-    } catch (error) {
-        console.error(' Failed to send transactions to Kafka:', error.message);
-        res.status(500).json({ error: "Kafka send failed" });
+      return; // Exit early for async CSV stream
+    } else {
+      return res.status(400).json({ error: "❌ Unsupported file type" });
     }
-}
 
-
-// GET /transactions → fetch all transactions from MongoDB
-app.get('/transactions', async (req, res) => {
-    try {
-        const transactions = await db.collection(COLLECTION_NAME).find({}).toArray();
-        res.json(transactions);
-    } catch (error) {
-        console.error(" Error fetching transactions:", error.message);
-        res.status(500).json({ error: "Failed to fetch transactions" });
-    }
+    await sendToKafka(transactions);
+    res.json({ message: "✅ JSON data sent to Kafka" });
+  } catch (err) {
+    console.error('❌ File upload failed:', err.message);
+    res.status(500).json({ error: '❌ Failed to process file' });
+  }
 });
 
-//  send all transactions to Kafka
-app.post('/send-to-kafka', sendTransactionsToKafka);
+// 🌐 MongoDB ingestion endpoint
+app.post('/use-mongo', async (req, res) => {
+  const { uri, dbName, collectionName } = req.body;
 
+  try {
+    if (currentDbClient) await currentDbClient.close();
+    currentDbClient = new MongoClient(uri);
+    await currentDbClient.connect();
 
+    const db = currentDbClient.db(dbName);
+    const transactions = await db.collection(collectionName).find({}).toArray();
 
+    await sendToKafka(transactions);
+    res.json({ message: "✅ MongoDB data sent to Kafka" });
+  } catch (err) {
+    console.error('❌ Mongo error:', err.message);
+    res.status(500).json({ error: "❌ MongoDB connection or fetch failed" });
+  }
+});
 
-async function startServer() {
-    await connectToMongoDB(); // Connect to MongoDB first
-    await connectKafkaProducer(); // Connect Kafka producer next
-    app.listen(PORT, () => {
-        console.log(` Transaction Generator API listening on port ${PORT}`);
-    });
-}
-
-
-
-startServer(); 
+// 🎯 Start the API
+connectKafkaProducer().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 TransactionGenerationAPI running on port ${PORT}`);
+  });
+});
