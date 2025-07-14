@@ -7,6 +7,7 @@ const {
   sendEnrichedTransaction,
   disconnectProducer,
 } = require('./Producer');
+const PORT = process.env.PORT || 3000;
 
 async function main() {
   if (!process.env.KAFKA_BROKER) {
@@ -38,6 +39,9 @@ async function main() {
     process.exit(0);
   });
 }
+server.listen(PORT, () => {
+    console.log(` Health check server running on port ${PORT}`);
+  });
 
 main().catch((err) => {
   console.error(' Fatal error:', err.message);
